@@ -1,0 +1,14 @@
+{
+  "GREEN_PATH": "C:\\Program Files (x86)\\xx\\yy.exe",
+  "USER": "xx",
+  "PWD": "xx",
+  "LOCAL_DIR": "D:\\temp\\tu_debug",
+  "HOST_USER": "xx",
+  "HOST_PWD": "xx",
+  "HOST_IP": "10.10.10.10",
+  "HOST_PORT": 22,
+  "DEST_DIR": "/root/xx/yy",
+  "PUT_DIR_DICT": {
+  }
+}
+

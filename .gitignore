@@ -1,0 +1,8 @@
+/.idea/
+/.vscode/
+/exe/file_auto_get.exe
+/exe/file_auto_put.exe
+/exe/get_file.json
+/exe/put_file.json
+*.swp
+
