@@ -85,12 +85,13 @@ def check_and_upload():
                         HOST_IP, local_file, PUT_DIR_DICT[sub_file], 20, 'put')
                 print(f"{PUT_DIR_DICT[sub_file]} updated in {datetime.now()}")
 
-        # 下载更新文件,这里执行多次的目的是保障文件被取完
-        for _ in range(3):
+        # 下载更新文件(多次循环保证文件取完)
+        for _ in range(5):
             subprocess.check_output(
                 [GREEN_PATH, '-l', LOCAL_DIR, '-u', USER, '-p', PWD],
                 stderr=subprocess.STDOUT)
-        time.sleep(5)
+        # :TODO: 这里要确认下3秒的时间是否够？或者有什么更好的方法判断传送文件已经完成
+        time.sleep(3)
 
 
 if __name__ == '__main__':
@@ -105,11 +106,12 @@ if __name__ == '__main__':
 
         print(f"DEST_DIR:{DEST_DIR}\n")
 
-        subprocess.check_output(
-            [GREEN_PATH, '-l', LOCAL_DIR, '-u', USER, '-p', PWD],
-            stderr=subprocess.STDOUT)
+        for _ in range(5):
+            subprocess.check_output(
+                [GREEN_PATH, '-l', LOCAL_DIR, '-u', USER, '-p', PWD],
+                stderr=subprocess.STDOUT)
 
-        time.sleep(5)
+        time.sleep(10)
 
         PUT_DIR_DICT = {}
         for sub_file in os.listdir(LOCAL_DIR):
@@ -124,4 +126,5 @@ if __name__ == '__main__':
         sys.exit(0)
 
     check_and_upload()
+
 

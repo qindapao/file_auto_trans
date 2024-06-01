@@ -44,6 +44,9 @@ def process_directory(
         # 首先处理所有文件
         for file in files:
             file_path = os.path.join(root, file)
+            # 临时措施
+            if '.git' in file_path:
+                continue
             if not is_just_record_md5:
                 if is_force_update or (
                         get_md5(file_path) != MD5_DICT[file_path]):
