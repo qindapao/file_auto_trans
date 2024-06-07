@@ -5,4 +5,8 @@
 /exe/get_file.json
 /exe/put_file.json
 *.swp
+.tags
+GPATH
+GRTAGS
+GTAGS
 

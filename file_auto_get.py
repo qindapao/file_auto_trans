@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# 执行机那边安装git bash,保证有sftp工具
 import os
 import hashlib
 import subprocess
@@ -9,6 +10,7 @@ from datetime import datetime
 import shutil
 import sys
 import paramiko
+from colorama import Fore, Style, init
 
 DM5_NUM = {}
 
@@ -34,6 +36,24 @@ def get_md5(single_file):
     with open(single_file, 'rb') as f:
         return hashlib.md5(f.read()).hexdigest()
 
+def mkdir_p(sftp, remote_directory):
+    """Change to this directory, recursively making new folders if needed.
+    Returns True if any folders were created."""
+    if remote_directory == '/':
+        # absolute path so change directory to root
+        sftp.chdir('/')
+        return
+    if remote_directory == '':
+        # top-level relative directory must exist
+        return
+    try:
+        sftp.chdir(remote_directory)  # sub-directory exists
+    except IOError:
+        dirname, basename = os.path.split(remote_directory.rstrip('/'))
+        mkdir_p(sftp, dirname)  # make parent directories
+        sftp.mkdir(basename)  # sub-directory missing, so created it
+        sftp.chdir(basename)
+        return True
 
 def remote_file(ip, local_f, remote_f, time_out, opo=None):
     ssh_c = paramiko.SSHClient()
@@ -50,10 +70,13 @@ def remote_file(ip, local_f, remote_f, time_out, opo=None):
             try:
                 sftp.stat(remote_dir)
             except IOError:
-                sftp.mkdir(remote_dir)
+                mkdir_p(sftp, remote_dir)
             sftp.put(local_f, remote_f)
     except Exception:
         return False
+    finally:
+        sftp.close()
+        ssh_c.close()
     return True
 
 
@@ -71,8 +94,19 @@ def delete_all_files_in_a_dir(delete_dir):
     else:
         print("The directory does not exist")
 
+def update_local_files(sleep_time):
+    # 下载更新文件(多次循环保证文件取完)
+    for _ in range(5):
+        subprocess.check_output(
+            [GREEN_PATH, '-l', LOCAL_DIR, '-u', USER, '-p', PWD],
+            stderr=subprocess.STDOUT)
+    # :TODO: 有什么更好的方法判断传送文件已经完成
+    time.sleep(sleep_time)
+
 
 def check_and_upload():
+    # 第一次取文件时间长点
+    update_local_files(10)
     while True:
         for sub_file in os.listdir(LOCAL_DIR):
             local_file = LOCAL_DIR + os.path.sep + sub_file
@@ -83,18 +117,12 @@ def check_and_upload():
                 # sftp上传文件到环境中
                 remote_file(
                         HOST_IP, local_file, PUT_DIR_DICT[sub_file], 20, 'put')
-                print(f"{PUT_DIR_DICT[sub_file]} updated in {datetime.now()}")
+                print(f"{Fore.GREEN}{datetime.now().strftime('%H:%M:%S %Y-%m-%d')}{Style.RESET_ALL} {PUT_DIR_DICT[sub_file]} updated")
 
-        # 下载更新文件(多次循环保证文件取完)
-        for _ in range(5):
-            subprocess.check_output(
-                [GREEN_PATH, '-l', LOCAL_DIR, '-u', USER, '-p', PWD],
-                stderr=subprocess.STDOUT)
-        # :TODO: 这里要确认下3秒的时间是否够？或者有什么更好的方法判断传送文件已经完成
-        time.sleep(3)
-
+        update_local_files(3)
 
 if __name__ == '__main__':
+    init()
     # 如果JSON_INFO中的DEST_DIR键不为空，那么获取一次绿传中的所有文件，
     # 然后重新填充JSON文件(PUT_DIR_DICT键)，
     # 并且删除DEST_DIR键，然后退出程序，等待下一次执行
@@ -125,6 +153,10 @@ if __name__ == '__main__':
             json.dump(JSON_INFO, my_file, indent=4)
         sys.exit(0)
 
-    check_and_upload()
+    try:
+        check_and_upload()
+    except Exception as e:
+        print(f"fatal err happen. {e}")
+        time.sleep(10)
 
 
