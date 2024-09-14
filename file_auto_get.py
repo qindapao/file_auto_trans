@@ -29,6 +29,9 @@ HOST_PWD = JSON_INFO['HOST_PWD']
 PUT_DIR_DICT = JSON_INFO['PUT_DIR_DICT']
 HOST_PORT = JSON_INFO['HOST_PORT']
 HOST_IP = JSON_INFO['HOST_IP']
+if isinstance(HOST_IP, str):
+    HOST_IP = [HOST_IP]
+
 DEST_DIR = JSON_INFO['DEST_DIR']
 
 
@@ -115,9 +118,10 @@ def check_and_upload():
             if md5_val != spec_val:
                 DM5_NUM.update({sub_file: md5_val})
                 # sftp上传文件到环境中
-                remote_file(
-                        HOST_IP, local_file, PUT_DIR_DICT[sub_file], 20, 'put')
-                print(f"{Fore.GREEN}{datetime.now().strftime('%H:%M:%S %Y-%m-%d')}{Style.RESET_ALL} {PUT_DIR_DICT[sub_file]} updated")
+                for host_ip in HOST_IP:
+                    remote_file(
+                            host_ip, local_file, PUT_DIR_DICT[sub_file], 20, 'put')
+                    print(f"{Fore.GREEN}{datetime.now().strftime('%H:%M:%S %Y-%m-%d')}{Style.RESET_ALL} {PUT_DIR_DICT[sub_file]} {host_ip} updated")
 
         update_local_files(3)
 
